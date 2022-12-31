@@ -1,7 +1,7 @@
 package br.com.erudio.controller;
 
 import br.com.erudio.data.vo.v1.PersonVO;
-import br.com.erudio.model.Person;
+import br.com.erudio.data.vo.v2.PersonVOV2;
 import br.com.erudio.service.PersonService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -29,8 +29,13 @@ public class PersonController {
     }
 
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public PersonVO save(@RequestBody PersonVO person) throws Exception {
+    public PersonVO create(@RequestBody PersonVO person) throws Exception {
         return service.create(person);
+    }
+
+    @PostMapping(value = "/v2", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    public PersonVOV2 createV2(@RequestBody PersonVOV2 person) throws Exception {
+        return service.createV2(person);
     }
 
     @PutMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
