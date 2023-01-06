@@ -1,16 +1,20 @@
 package br.com.erudio.data.vo.v1;
 
-import br.com.erudio.model.Person;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import java.util.Objects;
 
+@JsonPropertyOrder({"id", "firstName", "lastName", "address", "gender"})
 public class PersonVO {
 
 
     private static final long serialVersionUID = 1L;
 
     private Long id;
+
     private String firstName;
+
     private String lastName;
 
     private String address;
