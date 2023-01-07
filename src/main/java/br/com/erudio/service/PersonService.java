@@ -9,8 +9,10 @@ import br.com.erudio.mapper.DozerMapper;
 import br.com.erudio.mapper.custom.PersonMapper;
 import br.com.erudio.model.Person;
 import br.com.erudio.repository.PersonRepository;
+
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -33,14 +35,7 @@ public class PersonService {
         List<PersonVO> personVOS = DozerMapper.parseListObjects(repository.findAll(), PersonVO.class);
         personVOS
                 .stream()
-                        .forEach(p -> {
-                            try {
-                                p.add(linkTo(methodOn(PersonController.class).findById(p.getKey())).withSelfRel());
-                            } catch (Exception e) {
-                                throw new RuntimeException(e);
-                            }
-                        });
-
+                .forEach(p -> p.add(linkTo(methodOn(PersonController.class).findById(p.getKey())).withSelfRel()));
         return personVOS;
     }
 
@@ -57,7 +52,7 @@ public class PersonService {
     }
 
     public PersonVO create(PersonVO person) {
-        if(person == null) throw new RequiredObjectIsNullException();
+        if (person == null) throw new RequiredObjectIsNullException();
         logger.info("Creating one person!");
         var entity = DozerMapper.parseObject(person, Person.class);
         PersonVO vo = DozerMapper.parseObject(repository.save(entity), PersonVO.class);
@@ -76,7 +71,7 @@ public class PersonService {
 
 
     public PersonVO update(PersonVO person) {
-        if(person == null) throw new RequiredObjectIsNullException();
+        if (person == null) throw new RequiredObjectIsNullException();
 
         logger.info("Updating one person!");
 
