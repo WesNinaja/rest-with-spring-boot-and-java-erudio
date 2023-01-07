@@ -49,11 +49,11 @@ public class PersonControllerJsonTest extends AbstractIntegrationTest {
 
     @Test
     @Order(1)
-    public void testCreate() throws IOException {
+    void testCreate() throws IOException {
         mockPerson();
 
         specification = new RequestSpecBuilder()
-                .addHeader(TestConfigs.HEADER_PARAM_ORIGIN, "https://erudio.com.br")
+                .addHeader(TestConfigs.HEADER_PARAM_ORIGIN, TestConfigs.ORIGIN_ERUDIO)
                 .setBasePath("/api/person/v1")
                 .setPort(TestConfigs.SERVER_PORT)
                 .addFilter(new RequestLoggingFilter(LogDetail.ALL))
@@ -88,6 +88,108 @@ public class PersonControllerJsonTest extends AbstractIntegrationTest {
         assertEquals("Stallman", createdPerson.getLastName());
         assertEquals("New York City, New York, US", createdPerson.getAddress());
         assertEquals("Male", createdPerson.getGender());
+    }
+
+    @Test
+    @Order(2)
+    void testCreateWithWrongOrigin() throws IOException {
+        mockPerson();
+
+        specification = new RequestSpecBuilder()
+                .addHeader(TestConfigs.HEADER_PARAM_ORIGIN, TestConfigs.ORIGIN_SEMERU)
+                .setBasePath("/api/person/v1")
+                .setPort(TestConfigs.SERVER_PORT)
+                .addFilter(new RequestLoggingFilter(LogDetail.ALL))
+                .addFilter(new ResponseLoggingFilter(LogDetail.ALL))
+                .build();
+
+        var content =
+                given().spec(specification)
+                        .contentType(TestConfigs.CONTENT_TYPE_JSON)
+                            .body(person)
+                            .when()
+                            .post()
+                        .then()
+                            .statusCode(403)
+                        //Nesse caso, usamos o asString porque senão ele vai usar o objectMapper do restAssured e vai ter problemas com as serializationFeatures pra propriedades desconhecidas
+                        .extract()
+                            .body()
+                                .asString();
+
+        assertNotNull(content);
+        assertEquals("Invalid CORS request", content);
+    }
+
+    @Test
+    @Order(3)
+    void testFindById() throws IOException {
+        mockPerson();
+
+        specification = new RequestSpecBuilder()
+                .addHeader(TestConfigs.HEADER_PARAM_ORIGIN, TestConfigs.ORIGIN_ERUDIO)
+                .setBasePath("/api/person/v1")
+                .setPort(TestConfigs.SERVER_PORT)
+                .addFilter(new RequestLoggingFilter(LogDetail.ALL))
+                .addFilter(new ResponseLoggingFilter(LogDetail.ALL))
+                .build();
+
+        var content =
+                given().spec(specification)
+                        .contentType(TestConfigs.CONTENT_TYPE_JSON)
+                            .pathParams("id", person.getId())
+                            .when()
+                            .get("{id}")
+                        .then()
+                            .statusCode(200)
+                            //Nesse caso, usamos o asString porque senão ele vai usar o objectMapper do restAssured e vai ter problemas com as serializationFeatures pra propriedades desconhecidas
+                                .extract()
+                                .body()
+                                    .asString();
+
+        PersonVO persistedPerson = objectMapper.readValue(content, PersonVO.class);
+        person = persistedPerson;
+
+        assertNotNull(persistedPerson);
+        assertNotNull(persistedPerson.getId());
+        assertNotNull(persistedPerson.getFirstName());
+        assertNotNull(persistedPerson.getLastName());
+        assertNotNull(persistedPerson.getAddress());
+        assertNotNull(persistedPerson.getGender());
+        assertTrue(persistedPerson.getId() > 0);
+
+        assertEquals("Richard", persistedPerson.getFirstName());
+        assertEquals("Stallman", persistedPerson.getLastName());
+        assertEquals("New York City, New York, US", persistedPerson.getAddress());
+        assertEquals("Male", persistedPerson.getGender());
+    }
+    @Test
+    @Order(4)
+    void testFindByIdWithWronOrigin() throws IOException {
+        mockPerson();
+
+        specification = new RequestSpecBuilder()
+                .addHeader(TestConfigs.HEADER_PARAM_ORIGIN, TestConfigs.ORIGIN_SEMERU)
+                .setBasePath("/api/person/v1")
+                .setPort(TestConfigs.SERVER_PORT)
+                .addFilter(new RequestLoggingFilter(LogDetail.ALL))
+                .addFilter(new ResponseLoggingFilter(LogDetail.ALL))
+                .build();
+
+        var content =
+                given().spec(specification)
+                        .contentType(TestConfigs.CONTENT_TYPE_JSON)
+                            .pathParams("id", person.getId())
+                            .when()
+                            .get("{id}")
+                        .then()
+                            .statusCode(403)
+                            //Nesse caso, usamos o asString porque senão ele vai usar o objectMapper do restAssured e vai ter problemas com as serializationFeatures pra propriedades desconhecidas
+                                .extract()
+                                .body()
+                                    .asString();
+
+        assertNotNull(content);
+        assertEquals("Invalid CORS request", content);
     }
 
     private void mockPerson() {
