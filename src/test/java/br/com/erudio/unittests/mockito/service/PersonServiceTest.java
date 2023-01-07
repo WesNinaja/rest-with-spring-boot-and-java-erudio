@@ -34,8 +34,8 @@ class PersonServiceTest {
     private PersonRepository personRepository;
 
     @BeforeEach
-    void setUpMocks () {
-     input= new MockPerson();
+    void setUpMocks() {
+        input = new MockPerson();
         MockitoAnnotations.openMocks(this);
     }
 
@@ -135,6 +135,7 @@ class PersonServiceTest {
         assertEquals("Last Name Test1", result.getLastName());
         assertEquals("Female", result.getGender());
     }
+
     @Test
     void testCreateWithNullPerson() {
         Exception exception = assertThrows(RequiredObjectIsNullException.class, () -> {
@@ -146,6 +147,7 @@ class PersonServiceTest {
         assertTrue(actualMessge.contains(expectedMessage));
 
     }
+
     @Test
     void testUpdateWithNullPerson() {
         Exception exception = assertThrows(RequiredObjectIsNullException.class, () -> {
