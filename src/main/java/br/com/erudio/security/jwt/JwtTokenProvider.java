@@ -1,4 +1,4 @@
-package br.com.erudio.security;
+package br.com.erudio.security.jwt;
 
 import br.com.erudio.data.vo.v1.security.TokenVO;
 import br.com.erudio.exception.InvalidJwtAuthenticationException;
