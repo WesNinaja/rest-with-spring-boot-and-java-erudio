@@ -44,12 +44,18 @@ public class SecurityConfig {
 //    }
 
     @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
+    PasswordEncoder passwordEncoder() {
+        Map<String, PasswordEncoder> encoders = new HashMap<>();
+
+        Pbkdf2PasswordEncoder pbkdf2PasswordEncoder = new Pbkdf2PasswordEncoder("", 8, 185000, Pbkdf2PasswordEncoder.SecretKeyFactoryAlgorithm.PBKDF2WithHmacSHA256);
+        encoders.put("pbkdf2", pbkdf2PasswordEncoder);
+        DelegatingPasswordEncoder passwordEncoder = new DelegatingPasswordEncoder("pbkdf2", encoders);
+        passwordEncoder.setDefaultPasswordEncoderForMatches(pbkdf2PasswordEncoder);
+        return passwordEncoder;
     }
 
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration)
+    AuthenticationManager authenticationManagerBean(AuthenticationConfiguration authenticationConfiguration)
             throws Exception {
         return authenticationConfiguration.getAuthenticationManager();
     }
@@ -63,7 +69,12 @@ public class SecurityConfig {
                 .authorizeHttpRequests(
                         //Aqui dizemos que é necessário autorização para cada requests.
                         authorizeHttpRequests -> authorizeHttpRequests
-                                .requestMatchers("/auth/signin", "/auth/refresh", "/swagger-ui/**", "/v3/api-docs/**").permitAll() //Essas urls não precisam se autenticar
+                                .requestMatchers(
+                                        "/auth/signin",
+                                        "/auth/refresh/**",
+                                        "/swagger-ui/**",
+                                        "/v3/api-docs/**"
+                                ).permitAll() //Essas urls não precisam se autenticar
                                 .requestMatchers("/api/**").authenticated() //Somente autenticado
                                 .requestMatchers("/users").denyAll() //Aqui negamos as urls
                 )
