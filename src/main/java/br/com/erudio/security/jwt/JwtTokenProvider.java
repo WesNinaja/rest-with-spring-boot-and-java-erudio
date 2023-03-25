@@ -64,11 +64,14 @@ public class JwtTokenProvider {
     }
 
     public TokenVO refreshToken(String refreshToken) {
+        //Usamos substring e removemos o bearer, porque nesse caso, precisamos apenas do token
         if (refreshToken.contains("Bearer ")) refreshToken =
                 refreshToken.substring("Bearer ".length());
 
+        //Verificamos o token e assim conseguimos recuperar o usuário e os roles dele dentro desse JWT
         JWTVerifier verifier = JWT.require(algorithm).build();
         DecodedJWT decodedJWT = verifier.verify(refreshToken);
+
         String username = decodedJWT.getSubject();
         List<String> roles = decodedJWT.getClaim("roles").asList(String.class);
         return createAccessToken(username, roles);

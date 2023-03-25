@@ -79,7 +79,7 @@ public class PersonController {
                     @ApiResponse(description = "Unauthorized", responseCode = "401", content = @Content),
                     @ApiResponse(description = "Internal Error", responseCode = "500", content = @Content),
             })
-    public PersonVO create(@RequestBody PersonVO person) throws Exception {
+    public PersonVO create(@RequestBody PersonVO person) {
         return service.create(person);
     }
 
