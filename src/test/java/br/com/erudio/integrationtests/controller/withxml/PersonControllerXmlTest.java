@@ -1,27 +1,22 @@
-package br.com.erudio.integrationtests.controller.withjson;
-
+package br.com.erudio.integrationtests.controller.withxml;
 
 import br.com.erudio.confing.TestConfigs;
 import br.com.erudio.integrationtests.testcontainer.AbstractIntegrationTest;
 import br.com.erudio.integrationtests.vo.AccountCredentialsVO;
 import br.com.erudio.integrationtests.vo.PersonVO;
 import br.com.erudio.integrationtests.vo.TokenVO;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import io.restassured.builder.RequestSpecBuilder;
 import io.restassured.filter.log.LogDetail;
 import io.restassured.filter.log.RequestLoggingFilter;
 import io.restassured.filter.log.ResponseLoggingFilter;
 import io.restassured.specification.RequestSpecification;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
-import org.junit.jupiter.api.Order;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestMethodOrder;
+import org.junit.jupiter.api.*;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.testcontainers.shaded.com.fasterxml.jackson.core.JsonProcessingException;
-import org.testcontainers.shaded.com.fasterxml.jackson.core.type.TypeReference;
-import org.testcontainers.shaded.com.fasterxml.jackson.databind.DeserializationFeature;
 import org.testcontainers.shaded.com.fasterxml.jackson.databind.JsonMappingException;
-import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 import java.util.List;
@@ -29,26 +24,18 @@ import java.util.List;
 import static io.restassured.RestAssured.given;
 import static org.junit.jupiter.api.Assertions.*;
 
-/**
- * PRA ESTE TESTE DE INTEGRAÇÃO VAMOS CADASTRAR O CARA E VAI REUSAR DEPOIS E POR ISSO VAMOS USAR A ANNOTATION TESTMETHODORDER
- * <p>
- * Como ele funciona?
- * Ele inicia um contexto, ele inicaliza uma imagem docker, e inicia um container do mysql, conecta-se a ele, aplica as migrations que a gente definiu, e aí sim ele executa os testes;
- * Vamos definir um Setup, Setup é algo vai ser executado antes da execução de todos os testes
- */
-
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
-@TestMethodOrder(OrderAnnotation.class)
-public class PersonControllerJsonTest extends AbstractIntegrationTest {
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+public class PersonControllerXmlTest extends AbstractIntegrationTest {
 
     private static RequestSpecification specification;
-    private static ObjectMapper objectMapper;
+    private static XmlMapper objectMapper;
     private static PersonVO person;
+
 
     @BeforeAll
     public static void setup() {
-        objectMapper = new ObjectMapper();
-        //Quando recebermos o json, ele vai ter campos de hateoas preenchidos, e o nosso VO não reconhece esses atributos do hateoas como links, e por isso desabilitamos falhas em propiedades desconhecidas
+        objectMapper = new XmlMapper();
         objectMapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
 
         person = new PersonVO();
@@ -56,19 +43,20 @@ public class PersonControllerJsonTest extends AbstractIntegrationTest {
 
     @Test
     @Order(0)
-    void authorization() throws JsonMappingException, JsonProcessingException {
+    public void authorization() throws JsonMappingException, JsonProcessingException {
+
         AccountCredentialsVO user = new AccountCredentialsVO("leandro", "admin123");
 
         var accessToken = given()
                 .basePath("/auth/signin")
                 .port(TestConfigs.SERVER_PORT)
-                .contentType(TestConfigs.CONTENT_TYPE_JSON)
+                .contentType(TestConfigs.CONTENT_TYPE_XML)
+                .accept(TestConfigs.CONTENT_TYPE_XML)
                 .body(user)
                 .when()
                 .post()
                 .then()
                 .statusCode(200)
-                //Nesse caso, usamos o asString porque senão ele vai usar o objectMapper do restAssured e vai ter problemas com as serializationFeatures pra propriedades desconhecidas
                 .extract()
                 .body()
                 .as(TokenVO.class)
@@ -81,7 +69,6 @@ public class PersonControllerJsonTest extends AbstractIntegrationTest {
                 .addFilter(new RequestLoggingFilter(LogDetail.ALL))
                 .addFilter(new ResponseLoggingFilter(LogDetail.ALL))
                 .build();
-
     }
 
     @Test
@@ -90,7 +77,8 @@ public class PersonControllerJsonTest extends AbstractIntegrationTest {
         mockPerson();
 
         var content = given().spec(specification)
-                .contentType(TestConfigs.CONTENT_TYPE_JSON)
+                .contentType(TestConfigs.CONTENT_TYPE_XML)
+                .accept(TestConfigs.CONTENT_TYPE_XML)
                 .body(person)
                 .when()
                 .post()
@@ -124,7 +112,8 @@ public class PersonControllerJsonTest extends AbstractIntegrationTest {
         person.setLastName("Piquet Souto");
 
         var content = given().spec(specification)
-                .contentType(TestConfigs.CONTENT_TYPE_JSON)
+                .contentType(TestConfigs.CONTENT_TYPE_XML)
+                .accept(TestConfigs.CONTENT_TYPE_XML)
                 .body(person)
                 .when()
                 .post()
@@ -158,7 +147,8 @@ public class PersonControllerJsonTest extends AbstractIntegrationTest {
         mockPerson();
 
         var content = given().spec(specification)
-                .contentType(TestConfigs.CONTENT_TYPE_JSON)
+                .contentType(TestConfigs.CONTENT_TYPE_XML)
+                .accept(TestConfigs.CONTENT_TYPE_XML)
                 .header(TestConfigs.HEADER_PARAM_ORIGIN, TestConfigs.ORIGIN_ERUDIO)
                 .pathParams("id", person.getId())
                 .when()
@@ -193,7 +183,8 @@ public class PersonControllerJsonTest extends AbstractIntegrationTest {
     void testDelete() throws IOException {
 
         given().spec(specification)
-                .contentType(TestConfigs.CONTENT_TYPE_JSON)
+                .contentType(TestConfigs.CONTENT_TYPE_XML)
+                .accept(TestConfigs.CONTENT_TYPE_XML)
                 .pathParams("id", person.getId())
                 .when()
                 .delete("{id}")
@@ -206,7 +197,8 @@ public class PersonControllerJsonTest extends AbstractIntegrationTest {
     void testFindAll() throws IOException {
 
         var content = given().spec(specification)
-                .contentType(TestConfigs.CONTENT_TYPE_JSON)
+                .contentType(TestConfigs.CONTENT_TYPE_XML)
+                .accept(TestConfigs.CONTENT_TYPE_XML)
                 .when()
                 .get()
                 .then()
@@ -215,7 +207,7 @@ public class PersonControllerJsonTest extends AbstractIntegrationTest {
                 .extract()
                 .body()
                 .asString();
-                //.as(new TypeRef<List<PersonVO>>() {});
+        //.as(new TypeRef<List<PersonVO>>() {});
 
         List<PersonVO> personsVO = objectMapper.readValue(content, new TypeReference<List<PersonVO>>() {});
 
@@ -263,7 +255,8 @@ public class PersonControllerJsonTest extends AbstractIntegrationTest {
 
 
         given().spec(specificationWithoutToken)
-                .contentType(TestConfigs.CONTENT_TYPE_JSON)
+                .contentType(TestConfigs.CONTENT_TYPE_XML)
+                .accept(TestConfigs.CONTENT_TYPE_XML)
                 .when()
                 .get()
                 .then()

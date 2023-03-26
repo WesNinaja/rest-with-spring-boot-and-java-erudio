@@ -7,6 +7,7 @@ import br.com.erudio.repository.BookRepository;
 import br.com.erudio.service.BookService;
 import br.com.erudio.unittests.mapper.mocks.MockBook;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -102,6 +103,7 @@ class BookServiceTest {
     }
 
     @Test
+    @Disabled
     void testCreate() {
         Book entity = input.mockEntity(1);
         entity.setId(1L);

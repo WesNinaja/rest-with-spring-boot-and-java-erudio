@@ -1,4 +1,4 @@
-package br.com.erudio.integrationtests.controller.withjson;
+package br.com.erudio.integrationtests.controller.withyaml;
 
 
 import br.com.erudio.confing.TestConfigs;
@@ -7,50 +7,36 @@ import br.com.erudio.integrationtests.vo.AccountCredentialsVO;
 import br.com.erudio.integrationtests.vo.PersonVO;
 import br.com.erudio.integrationtests.vo.TokenVO;
 import io.restassured.builder.RequestSpecBuilder;
+import io.restassured.config.EncoderConfig;
+import io.restassured.config.RestAssuredConfig;
 import io.restassured.filter.log.LogDetail;
 import io.restassured.filter.log.RequestLoggingFilter;
 import io.restassured.filter.log.ResponseLoggingFilter;
+import io.restassured.http.ContentType;
 import io.restassured.specification.RequestSpecification;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
-import org.junit.jupiter.api.Order;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestMethodOrder;
+import org.junit.jupiter.api.*;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.testcontainers.shaded.com.fasterxml.jackson.core.JsonProcessingException;
-import org.testcontainers.shaded.com.fasterxml.jackson.core.type.TypeReference;
-import org.testcontainers.shaded.com.fasterxml.jackson.databind.DeserializationFeature;
 import org.testcontainers.shaded.com.fasterxml.jackson.databind.JsonMappingException;
-import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 
 import static io.restassured.RestAssured.given;
 import static org.junit.jupiter.api.Assertions.*;
 
-/**
- * PRA ESTE TESTE DE INTEGRAÇÃO VAMOS CADASTRAR O CARA E VAI REUSAR DEPOIS E POR ISSO VAMOS USAR A ANNOTATION TESTMETHODORDER
- * <p>
- * Como ele funciona?
- * Ele inicia um contexto, ele inicaliza uma imagem docker, e inicia um container do mysql, conecta-se a ele, aplica as migrations que a gente definiu, e aí sim ele executa os testes;
- * Vamos definir um Setup, Setup é algo vai ser executado antes da execução de todos os testes
- */
-
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
-@TestMethodOrder(OrderAnnotation.class)
-public class PersonControllerJsonTest extends AbstractIntegrationTest {
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+public class PersonControllerYamlTest extends AbstractIntegrationTest {
 
     private static RequestSpecification specification;
-    private static ObjectMapper objectMapper;
+    private static YMLMapper objectMapper;
     private static PersonVO person;
 
     @BeforeAll
     public static void setup() {
-        objectMapper = new ObjectMapper();
-        //Quando recebermos o json, ele vai ter campos de hateoas preenchidos, e o nosso VO não reconhece esses atributos do hateoas como links, e por isso desabilitamos falhas em propiedades desconhecidas
-        objectMapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
-
+        objectMapper = new YMLMapper();
         person = new PersonVO();
     }
 
@@ -60,10 +46,15 @@ public class PersonControllerJsonTest extends AbstractIntegrationTest {
         AccountCredentialsVO user = new AccountCredentialsVO("leandro", "admin123");
 
         var accessToken = given()
+                .config(RestAssuredConfig
+                        .config()
+                        .encoderConfig(EncoderConfig.encoderConfig()
+                                .encodeContentTypeAs(TestConfigs.CONTENT_TYPE_YML, ContentType.TEXT)))
+                .accept(TestConfigs.CONTENT_TYPE_YML)
                 .basePath("/auth/signin")
                 .port(TestConfigs.SERVER_PORT)
-                .contentType(TestConfigs.CONTENT_TYPE_JSON)
-                .body(user)
+                .contentType(TestConfigs.CONTENT_TYPE_YML)
+                .body(user, objectMapper)
                 .when()
                 .post()
                 .then()
@@ -71,7 +62,7 @@ public class PersonControllerJsonTest extends AbstractIntegrationTest {
                 //Nesse caso, usamos o asString porque senão ele vai usar o objectMapper do restAssured e vai ter problemas com as serializationFeatures pra propriedades desconhecidas
                 .extract()
                 .body()
-                .as(TokenVO.class)
+                .as(TokenVO.class, objectMapper)
                 .getAccessToken();
 
         specification = new RequestSpecBuilder()
@@ -89,9 +80,14 @@ public class PersonControllerJsonTest extends AbstractIntegrationTest {
     void testCreate() throws IOException {
         mockPerson();
 
-        var content = given().spec(specification)
-                .contentType(TestConfigs.CONTENT_TYPE_JSON)
-                .body(person)
+        var createdPerson = given().spec(specification)
+                .config(RestAssuredConfig
+                        .config()
+                        .encoderConfig(EncoderConfig.encoderConfig()
+                                .encodeContentTypeAs(TestConfigs.CONTENT_TYPE_YML, ContentType.TEXT)))
+                .contentType(TestConfigs.CONTENT_TYPE_YML)
+                .accept(TestConfigs.CONTENT_TYPE_YML)
+                .body(person, objectMapper)
                 .when()
                 .post()
                 .then()
@@ -99,9 +95,8 @@ public class PersonControllerJsonTest extends AbstractIntegrationTest {
                 //Nesse caso, usamos o asString porque senão ele vai usar o objectMapper do restAssured e vai ter problemas com as serializationFeatures pra propriedades desconhecidas
                 .extract()
                 .body()
-                .asString();
+                .as(PersonVO.class, objectMapper);
 
-        PersonVO createdPerson = objectMapper.readValue(content, PersonVO.class);
         person = createdPerson;
 
         assertNotNull(createdPerson);
@@ -123,9 +118,14 @@ public class PersonControllerJsonTest extends AbstractIntegrationTest {
     void testUpdate() throws IOException {
         person.setLastName("Piquet Souto");
 
-        var content = given().spec(specification)
-                .contentType(TestConfigs.CONTENT_TYPE_JSON)
-                .body(person)
+        var persistedPerson = given().spec(specification)
+                .config(RestAssuredConfig
+                        .config()
+                        .encoderConfig(EncoderConfig.encoderConfig()
+                                .encodeContentTypeAs(TestConfigs.CONTENT_TYPE_YML, ContentType.TEXT)))
+                .contentType(TestConfigs.CONTENT_TYPE_YML)
+                .accept(TestConfigs.CONTENT_TYPE_YML)
+                .body(person, objectMapper)
                 .when()
                 .post()
                 .then()
@@ -133,23 +133,22 @@ public class PersonControllerJsonTest extends AbstractIntegrationTest {
                 //Nesse caso, usamos o asString porque senão ele vai usar o objectMapper do restAssured e vai ter problemas com as serializationFeatures pra propriedades desconhecidas
                 .extract()
                 .body()
-                .asString();
+                .as(PersonVO.class, objectMapper);
 
-        PersonVO createdPerson = objectMapper.readValue(content, PersonVO.class);
-        person = createdPerson;
+        person = persistedPerson;
 
-        assertNotNull(createdPerson);
-        assertNotNull(createdPerson.getId());
-        assertNotNull(createdPerson.getFirstName());
-        assertNotNull(createdPerson.getLastName());
-        assertNotNull(createdPerson.getAddress());
-        assertNotNull(createdPerson.getGender());
-        assertEquals(person.getId(), createdPerson.getId());
+        assertNotNull(persistedPerson);
+        assertNotNull(persistedPerson.getId());
+        assertNotNull(persistedPerson.getFirstName());
+        assertNotNull(persistedPerson.getLastName());
+        assertNotNull(persistedPerson.getAddress());
+        assertNotNull(persistedPerson.getGender());
+        assertEquals(person.getId(), persistedPerson.getId());
 
-        assertEquals("Richard", createdPerson.getFirstName());
-        assertEquals("Piquet Souto", createdPerson.getLastName());
-        assertEquals("New York City, New York, US", createdPerson.getAddress());
-        assertEquals("Male", createdPerson.getGender());
+        assertEquals("Richard", persistedPerson.getFirstName());
+        assertEquals("Piquet Souto", persistedPerson.getLastName());
+        assertEquals("New York City, New York, US", persistedPerson.getAddress());
+        assertEquals("Male", persistedPerson.getGender());
     }
 
     @Test
@@ -157,8 +156,13 @@ public class PersonControllerJsonTest extends AbstractIntegrationTest {
     void testFindById() throws IOException {
         mockPerson();
 
-        var content = given().spec(specification)
-                .contentType(TestConfigs.CONTENT_TYPE_JSON)
+        var persistedPerson = given().spec(specification)
+                .config(RestAssuredConfig
+                        .config()
+                        .encoderConfig(EncoderConfig.encoderConfig()
+                                .encodeContentTypeAs(TestConfigs.CONTENT_TYPE_YML, ContentType.TEXT)))
+                .contentType(TestConfigs.CONTENT_TYPE_YML)
+                .accept(TestConfigs.CONTENT_TYPE_YML)
                 .header(TestConfigs.HEADER_PARAM_ORIGIN, TestConfigs.ORIGIN_ERUDIO)
                 .pathParams("id", person.getId())
                 .when()
@@ -168,9 +172,8 @@ public class PersonControllerJsonTest extends AbstractIntegrationTest {
                 //Nesse caso, usamos o asString porque senão ele vai usar o objectMapper do restAssured e vai ter problemas com as serializationFeatures pra propriedades desconhecidas
                 .extract()
                 .body()
-                .asString();
+                .as(PersonVO.class, objectMapper);
 
-        PersonVO persistedPerson = objectMapper.readValue(content, PersonVO.class);
         person = persistedPerson;
 
         assertNotNull(persistedPerson);
@@ -193,7 +196,12 @@ public class PersonControllerJsonTest extends AbstractIntegrationTest {
     void testDelete() throws IOException {
 
         given().spec(specification)
-                .contentType(TestConfigs.CONTENT_TYPE_JSON)
+                .config(RestAssuredConfig
+                        .config()
+                        .encoderConfig(EncoderConfig.encoderConfig()
+                                .encodeContentTypeAs(TestConfigs.CONTENT_TYPE_YML, ContentType.TEXT)))
+                .contentType(TestConfigs.CONTENT_TYPE_YML)
+                .accept(TestConfigs.CONTENT_TYPE_YML)
                 .pathParams("id", person.getId())
                 .when()
                 .delete("{id}")
@@ -206,7 +214,12 @@ public class PersonControllerJsonTest extends AbstractIntegrationTest {
     void testFindAll() throws IOException {
 
         var content = given().spec(specification)
-                .contentType(TestConfigs.CONTENT_TYPE_JSON)
+                .config(RestAssuredConfig
+                        .config()
+                        .encoderConfig(EncoderConfig.encoderConfig()
+                                .encodeContentTypeAs(TestConfigs.CONTENT_TYPE_YML, ContentType.TEXT)))
+                .contentType(TestConfigs.CONTENT_TYPE_YML)
+                .accept(TestConfigs.CONTENT_TYPE_YML)
                 .when()
                 .get()
                 .then()
@@ -214,10 +227,10 @@ public class PersonControllerJsonTest extends AbstractIntegrationTest {
                 //Nesse caso, usamos o asString porque senão ele vai usar o objectMapper do restAssured e vai ter problemas com as serializationFeatures pra propriedades desconhecidas
                 .extract()
                 .body()
-                .asString();
-                //.as(new TypeRef<List<PersonVO>>() {});
+                .as(PersonVO[].class, objectMapper);
+        //.as(new TypeRef<List<BookVO>>() {});
 
-        List<PersonVO> personsVO = objectMapper.readValue(content, new TypeReference<List<PersonVO>>() {});
+        List<PersonVO> personsVO = Arrays.asList(content);
 
         PersonVO foundPersonOne = personsVO.get(0);
 
@@ -263,7 +276,12 @@ public class PersonControllerJsonTest extends AbstractIntegrationTest {
 
 
         given().spec(specificationWithoutToken)
-                .contentType(TestConfigs.CONTENT_TYPE_JSON)
+                .config(RestAssuredConfig
+                        .config()
+                        .encoderConfig(EncoderConfig.encoderConfig()
+                                .encodeContentTypeAs(TestConfigs.CONTENT_TYPE_YML, ContentType.TEXT)))
+                .contentType(TestConfigs.CONTENT_TYPE_YML)
+                .accept(TestConfigs.CONTENT_TYPE_YML)
                 .when()
                 .get()
                 .then()

@@ -1,35 +1,31 @@
 package br.com.erudio.integrationtests.vo;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.github.dozermapper.core.Mapping;
-import org.springframework.hateoas.RepresentationModel;
 
 import java.io.Serializable;
 import java.util.Date;
-import java.util.Objects;
 
-@JsonPropertyOrder({"id", "author", "title", "price", "launchDate"})
-public class BookVO extends RepresentationModel<BookVO> implements Serializable {
+import jakarta.xml.bind.annotation.XmlRootElement;
+
+@XmlRootElement
+public class BookVO implements Serializable{
 
     private static final long serialVersionUID = 1L;
 
-    @JsonProperty("id")
-    @Mapping("id")
-    private Long key;
+    private Long id;
     private String author;
     private Date launchDate;
     private Double price;
     private String title;
 
-    public BookVO(){}
-
-    public Long getKey() {
-        return key;
+    public BookVO() {
     }
 
-    public void setKey(Long key) {
-        this.key = key;
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public String getAuthor() {
@@ -65,16 +61,51 @@ public class BookVO extends RepresentationModel<BookVO> implements Serializable 
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        if (!super.equals(o)) return false;
-        BookVO vo = (BookVO) o;
-        return Objects.equals(key, vo.key) && Objects.equals(author, vo.author) && Objects.equals(launchDate, vo.launchDate) && Objects.equals(price, vo.price) && Objects.equals(title, vo.title);
+    public int hashCode() {
+        final int prime = 31;
+        int result = super.hashCode();
+        result = prime * result + ((author == null) ? 0 : author.hashCode());
+        result = prime * result + ((id == null) ? 0 : id.hashCode());
+        result = prime * result + ((launchDate == null) ? 0 : launchDate.hashCode());
+        result = prime * result + ((price == null) ? 0 : price.hashCode());
+        result = prime * result + ((title == null) ? 0 : title.hashCode());
+        return result;
     }
 
     @Override
-    public int hashCode() {
-        return Objects.hash(super.hashCode(), key, author, launchDate, price, title);
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (!super.equals(obj))
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        BookVO other = (BookVO) obj;
+        if (author == null) {
+            if (other.author != null)
+                return false;
+        } else if (!author.equals(other.author))
+            return false;
+        if (id == null) {
+            if (other.id != null)
+                return false;
+        } else if (!id.equals(other.id))
+            return false;
+        if (launchDate == null) {
+            if (other.launchDate != null)
+                return false;
+        } else if (!launchDate.equals(other.launchDate))
+            return false;
+        if (price == null) {
+            if (other.price != null)
+                return false;
+        } else if (!price.equals(other.price))
+            return false;
+        if (title == null) {
+            if (other.title != null)
+                return false;
+        } else if (!title.equals(other.title))
+            return false;
+        return true;
     }
 }

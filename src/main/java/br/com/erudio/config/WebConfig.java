@@ -1,5 +1,7 @@
 package br.com.erudio.config;
 
+import java.util.List;
+
 import br.com.erudio.serialization.converter.YamlJackson2HttpConverter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
@@ -8,8 +10,6 @@ import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.web.servlet.config.annotation.ContentNegotiationConfigurer;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
-
-import java.util.List;
 
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
@@ -31,7 +31,7 @@ public class WebConfig implements WebMvcConfigurer {
     public void addCorsMappings(CorsRegistry registry) {
         var allowedOrigins = corsOriginPatterns.split(",");
         registry.addMapping("/**")
-//                .allowedMethods("GET", "POST", "PUT")
+                //.allowedMethods("GET", "POST", "PUT")
                 .allowedMethods("*")
                 .allowedOrigins(allowedOrigins)
                 .allowCredentials(true);
