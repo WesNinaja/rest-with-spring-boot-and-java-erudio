@@ -13,6 +13,7 @@ import br.com.erudio.repository.PersonRepository;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -89,6 +90,24 @@ public class PersonService {
         vo.add(linkTo(methodOn(PersonController.class).findById(vo.getKey())).withSelfRel());
         return vo;
     }
+
+    //Para esse método como eu estou fazendo uma escrita de dados, e o spring data não gerencia, preciso usar a annotation Transactional, visto que criamos nossa própria operação, e é de modificação, caso seja uma query de leitura não precisamos do @Transactional.
+    @Transactional
+    public PersonVO disablePerson(Long id) {
+        logger.info("Disabling one person!");
+
+        repository.disablePerson(id);
+
+        var entity = repository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("No records found for this ID!"));
+
+        PersonVO vo = DozerMapper.parseObject(entity, PersonVO.class);
+
+        //Adicionando Heteoas
+        vo.add(linkTo(methodOn(PersonController.class).findById(id)).withSelfRel());
+        return vo;
+    }
+
 
     public void delete(Long id) {
         logger.info("Deleting one person!");
