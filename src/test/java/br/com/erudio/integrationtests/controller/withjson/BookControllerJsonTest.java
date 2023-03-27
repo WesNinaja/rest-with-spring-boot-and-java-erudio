@@ -5,6 +5,8 @@ import br.com.erudio.integrationtests.testcontainer.AbstractIntegrationTest;
 import br.com.erudio.integrationtests.vo.AccountCredentialsVO;
 import br.com.erudio.integrationtests.vo.BookVO;
 import br.com.erudio.integrationtests.vo.TokenVO;
+import br.com.erudio.integrationtests.vo.wrappers.WrapperBookVO;
+import br.com.erudio.integrationtests.vo.wrappers.WrapperPersonVO;
 import io.restassured.builder.RequestSpecBuilder;
 import io.restassured.filter.log.LogDetail;
 import io.restassured.filter.log.RequestLoggingFilter;
@@ -179,6 +181,8 @@ public class BookControllerJsonTest extends AbstractIntegrationTest {
 
         var content = given().spec(specification)
                 .contentType(TestConfigs.CONTENT_TYPE_JSON)
+                .accept(TestConfigs.CONTENT_TYPE_JSON)
+                .queryParams("page",0, "size",10, "direction", "asc")
                 .when()
                 .get()
                 .then()
@@ -188,26 +192,30 @@ public class BookControllerJsonTest extends AbstractIntegrationTest {
                 .body()
                 .asString();
 
-        List<BookVO> booksVO = objectMapper.readValue(content, new TypeReference<List<BookVO>>() {});
+//        List<BookVO> booksVO = objectMapper.readValue(content, new TypeReference<List<BookVO>>() {});
+        WrapperBookVO wrapper = objectMapper.readValue(content, WrapperBookVO.class);
+        var booksVO = wrapper.getEmbedded().getBooks();
 
         BookVO foundBookOne = booksVO.get(0);
 
         assertNotNull(foundBookOne);
         assertNotNull(foundBookOne.getId());
 
-        assertEquals("Michael C. Feathers", foundBookOne.getAuthor());
-        assertEquals("Working effectively with legacy code", foundBookOne.getTitle());
-        assertEquals(49.00, foundBookOne.getPrice());
+        assertEquals(12, foundBookOne.getId());
+        assertEquals("Viktor Mayer-Schonberger e Kenneth Kukier", foundBookOne.getAuthor());
+        assertEquals("Big Data: como extrair volume, variedade, velocidade e valor da avalanche de informação cotidiana", foundBookOne.getTitle());
+        assertEquals(54.00, foundBookOne.getPrice());
         assertNotNull(foundBookOne.getLaunchDate());
 
-        BookVO foundBookSix = booksVO.get(4);
+        BookVO foundBookSix = booksVO.get(5);
 
         assertNotNull(foundBookSix);
         assertNotNull(foundBookSix.getId());
 
-        assertEquals("Steve McConnell", foundBookSix.getAuthor());
-        assertEquals("Code complete", foundBookSix.getTitle());
-        assertEquals(58.00, foundBookSix.getPrice());
+        assertEquals(11, foundBookSix.getId());
+        assertEquals("Roger S. Pressman", foundBookSix.getAuthor());
+        assertEquals("Engenharia de Software: uma abordagem profissional", foundBookSix.getTitle());
+        assertEquals(56.00, foundBookSix.getPrice());
         assertNotNull(foundBookSix.getLaunchDate());
     }
 

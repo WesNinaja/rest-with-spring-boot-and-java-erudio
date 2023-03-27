@@ -61,56 +61,6 @@ class PersonServiceTest {
 
     }
 
-
-//    @Test
-//    void findAll() {
-//        List<Person> list = input.mockEntityList();
-//        //Quando o método repository for chamado a gente vai retornar um mock, é isso que vamos implementar com esse mockito
-//        when(personRepository.findAll()).thenReturn(list);
-//
-//        //Agora vamos efetivamente chamar o service com o metodo findById
-//        var people = service.findAll();
-//
-//        assertNotNull(people);
-//        assertEquals(14, people.size());
-//
-//        var personOne = people.get(1);
-//
-//        assertNotNull(personOne);
-//        assertNotNull(personOne.getKey());
-//        assertNotNull(personOne.getLinks());
-//        System.out.println(personOne.toString());
-//        assertTrue(personOne.toString().contains("links: [</api/person/v1/1>;rel=\"self\"]"));
-//        assertEquals("Addres Test1", personOne.getAddress());
-//        assertEquals("First Name Test1", personOne.getFirstName());
-//        assertEquals("Last Name Test1", personOne.getLastName());
-//        assertEquals("Female", personOne.getGender());
-//
-//        var personFour = people.get(4);
-//
-//        assertNotNull(personFour);
-//        assertNotNull(personFour.getKey());
-//        assertNotNull(personFour.getLinks());
-//        System.out.println(personFour.toString());
-//        assertTrue(personFour.toString().contains("links: [</api/person/v1/4>;rel=\"self\"]"));
-//        assertEquals("Addres Test4", personFour.getAddress());
-//        assertEquals("First Name Test4", personFour.getFirstName());
-//        assertEquals("Last Name Test4", personFour.getLastName());
-//        assertEquals("Male", personFour.getGender());
-//
-//        var personSeven = people.get(7);
-//
-//        assertNotNull(personSeven);
-//        assertNotNull(personSeven.getKey());
-//        assertNotNull(personSeven.getLinks());
-//        System.out.println(personSeven.toString());
-//        assertTrue(personSeven.toString().contains("links: [</api/person/v1/7>;rel=\"self\"]"));
-//        assertEquals("Addres Test7", personSeven.getAddress());
-//        assertEquals("First Name Test7", personSeven.getFirstName());
-//        assertEquals("Last Name Test7", personSeven.getLastName());
-//        assertEquals("Female", personSeven.getGender());
-//    }
-
     @Test
     void testCreate() {
         //Antes de ser persistida

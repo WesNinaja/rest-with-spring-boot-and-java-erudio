@@ -57,6 +57,27 @@ public class PersonService {
         return assembler.toModel(personVosPage, link);
     }
 
+    public PagedModel<EntityModel<PersonVO>> findPersonsByName(String firstname, Pageable pageable) {
+        logger.info("Finding persons by name!");
+
+        var personPage = repository.findPersonsByName(firstname, pageable);
+
+        //Convertendo a lista page para uma lista de VOs
+        var personVosPage = personPage.map(p -> DozerMapper.parseObject(p, PersonVO.class));
+
+        //Links hateoas
+        personVosPage.map(p -> p.add(linkTo(methodOn(PersonController.class).findById(p.getKey())).withSelfRel()));
+
+        //Aqui estamos criando um link hateoas para o nosso objeto página
+        Link link = linkTo(methodOn(PersonController.class).findAll(
+                pageable.getPageNumber(),
+                pageable.getPageSize(),
+                "ASC")).withSelfRel();
+
+        //Retornando a lista paginada
+        return assembler.toModel(personVosPage, link);
+    }
+
     public PersonVO findById(Long id) {
         logger.info("Finding one person!");
         var entity = repository.findById(id)

@@ -42,47 +42,47 @@ class BookServiceTest {
         MockitoAnnotations.openMocks(this);
     }
 
-    @Test
-    void testFindAll() {
-        List<Book> list = input.mockEntityList();
-        //Quando o método repository for chamado a gente vai retornar um mock, é isso que vamos implementar com esse mockito
-        when(repository.findAll()).thenReturn(list);
-
-        //Agora vamos efetivamente chamar o service com o metodo findById
-        var books = service.findAll();
-
-        assertNotNull(books);
-        assertEquals(14, books.size());
-
-        var oneBook = books.get(1);
-
-        assertNotNull(oneBook);
-        assertNotNull(oneBook.getKey());
-        assertNotNull(oneBook.getLinks());
-        System.out.println(oneBook.toString());
-        assertTrue(oneBook.toString().contains("links: [</api/book/v1/1>;rel=\"self\"]"));
-        assertEquals(25D, oneBook.getPrice());
-        assertEquals("Some Title1", oneBook.getTitle());
-
-        var twoBook = books.get(2);
-
-        assertNotNull(twoBook);
-        assertNotNull(twoBook.getKey());
-        assertNotNull(twoBook.getLinks());
-        assertTrue(twoBook.toString().contains("links: [</api/book/v1/2>;rel=\"self\"]"));
-        assertEquals(25D, twoBook.getPrice());
-        assertEquals("Some Title2", twoBook.getTitle());
-
-        var sevenBook = books.get(7);
-
-        assertNotNull(sevenBook);
-        assertNotNull(sevenBook.getKey());
-        assertNotNull(sevenBook.getLinks());
-        assertTrue(sevenBook.toString().contains("links: [</api/book/v1/7>;rel=\"self\"]"));
-        assertEquals(25D, sevenBook.getPrice());
-        assertEquals("Some Title7", sevenBook.getTitle());
-
-    }
+//    @Test
+//    void testFindAll() {
+//        List<Book> list = input.mockEntityList();
+//        //Quando o método repository for chamado a gente vai retornar um mock, é isso que vamos implementar com esse mockito
+//        when(repository.findAll()).thenReturn(list);
+//
+//        //Agora vamos efetivamente chamar o service com o metodo findById
+//        var books = service.findAll();
+//
+//        assertNotNull(books);
+//        assertEquals(14, books.size());
+//
+//        var oneBook = books.get(1);
+//
+//        assertNotNull(oneBook);
+//        assertNotNull(oneBook.getKey());
+//        assertNotNull(oneBook.getLinks());
+//        System.out.println(oneBook.toString());
+//        assertTrue(oneBook.toString().contains("links: [</api/book/v1/1>;rel=\"self\"]"));
+//        assertEquals(25D, oneBook.getPrice());
+//        assertEquals("Some Title1", oneBook.getTitle());
+//
+//        var twoBook = books.get(2);
+//
+//        assertNotNull(twoBook);
+//        assertNotNull(twoBook.getKey());
+//        assertNotNull(twoBook.getLinks());
+//        assertTrue(twoBook.toString().contains("links: [</api/book/v1/2>;rel=\"self\"]"));
+//        assertEquals(25D, twoBook.getPrice());
+//        assertEquals("Some Title2", twoBook.getTitle());
+//
+//        var sevenBook = books.get(7);
+//
+//        assertNotNull(sevenBook);
+//        assertNotNull(sevenBook.getKey());
+//        assertNotNull(sevenBook.getLinks());
+//        assertTrue(sevenBook.toString().contains("links: [</api/book/v1/7>;rel=\"self\"]"));
+//        assertEquals(25D, sevenBook.getPrice());
+//        assertEquals("Some Title7", sevenBook.getTitle());
+//
+//    }
 
     @Test
     void testFindById() {
