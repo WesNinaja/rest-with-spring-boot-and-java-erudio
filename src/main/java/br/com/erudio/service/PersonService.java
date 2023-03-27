@@ -9,16 +9,19 @@ import br.com.erudio.mapper.DozerMapper;
 import br.com.erudio.mapper.custom.PersonMapper;
 import br.com.erudio.model.Person;
 import br.com.erudio.repository.PersonRepository;
+import jakarta.transaction.Transactional;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PagedResourcesAssembler;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.Link;
+import org.springframework.hateoas.PagedModel;
+import org.springframework.stereotype.Service;
+
+import java.util.logging.Logger;
 
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
-
-import jakarta.transaction.Transactional;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
-import java.util.List;
-import java.util.logging.Logger;
 
 @Service
 public class PersonService {
@@ -27,17 +30,31 @@ public class PersonService {
 
     @Autowired
     PersonRepository repository;
-
     @Autowired
     PersonMapper mapper;
+    //Esse Assembler vai nos ajudar a criar links hateoas para nossas páginas
+    @Autowired
+    PagedResourcesAssembler<PersonVO> assembler;
 
-    public List<PersonVO> findAll() {
+    public PagedModel<EntityModel<PersonVO>> findAll(Pageable pageable) {
         logger.info("Finding all people!");
-        List<PersonVO> personVOS = DozerMapper.parseListObjects(repository.findAll(), PersonVO.class);
-        personVOS
-                .stream()
-                .forEach(p -> p.add(linkTo(methodOn(PersonController.class).findById(p.getKey())).withSelfRel()));
-        return personVOS;
+
+        var personPage = repository.findAll(pageable);
+
+        //Convertendo a lista page para uma lista de VOs
+        var personVosPage = personPage.map(p -> DozerMapper.parseObject(p, PersonVO.class));
+
+        //Links hateoas
+        personVosPage.map(p -> p.add(linkTo(methodOn(PersonController.class).findById(p.getKey())).withSelfRel()));
+
+        //Aqui estamos criando um link hateoas para o nosso objeto página
+        Link link = linkTo(methodOn(PersonController.class).findAll(
+                pageable.getPageNumber(),
+                pageable.getPageSize(),
+                "ASC")).withSelfRel();
+
+        //Retornando a lista paginada
+        return assembler.toModel(personVosPage, link);
     }
 
     public PersonVO findById(Long id) {

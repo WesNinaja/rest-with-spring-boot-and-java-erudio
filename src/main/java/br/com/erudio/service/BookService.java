@@ -1,13 +1,21 @@
 package br.com.erudio.service;
 
 import br.com.erudio.controller.BookController;
+import br.com.erudio.controller.PersonController;
 import br.com.erudio.data.vo.v1.BookVO;
+import br.com.erudio.data.vo.v1.PersonVO;
 import br.com.erudio.exception.RequiredObjectIsNullException;
 import br.com.erudio.exception.ResourceNotFoundException;
 import br.com.erudio.mapper.DozerMapper;
+import br.com.erudio.mapper.custom.PersonMapper;
 import br.com.erudio.model.Book;
 import br.com.erudio.repository.BookRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PagedResourcesAssembler;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.Link;
+import org.springframework.hateoas.PagedModel;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -24,15 +32,31 @@ public class BookService {
     @Autowired
     BookRepository repository;
 
-    public List<BookVO> findAll() {
+    @Autowired
+    PersonMapper mapper;
+    //Esse Assembler vai nos ajudar a criar links hateoas para nossas páginas
+    @Autowired
+    PagedResourcesAssembler<BookVO> assembler;
+
+    public PagedModel<EntityModel<BookVO>> findAll(Pageable pageable) {
         logger.info("Finding all books");
-        List<BookVO> booksVO = DozerMapper.parseListObjects(repository.findAll(), BookVO.class);
 
-        //Adicionando Heteoas
-        booksVO.stream()
-                .forEach(b -> b.add(linkTo(methodOn(BookController.class).findById(b.getKey())).withSelfRel()));
+        var bookPage = repository.findAll(pageable);
 
-        return booksVO;
+        //Convertendo a lista page para uma lista de VOs
+        var bookVosPage = bookPage.map(p -> DozerMapper.parseObject(p, BookVO.class));
+
+        //Links hateoas
+        bookVosPage.map(p -> p.add(linkTo(methodOn(BookController.class).findById(p.getKey())).withSelfRel()));
+
+        //Aqui estamos criando um link hateoas para o nosso objeto página
+        Link link = linkTo(methodOn(BookController.class).findAll(
+                pageable.getPageNumber(),
+                pageable.getPageSize(),
+                "ASC")).withSelfRel();
+
+        //Retornando a lista paginada
+        return assembler.toModel(bookVosPage, link);
     }
 
     public BookVO findById(Long id) {
